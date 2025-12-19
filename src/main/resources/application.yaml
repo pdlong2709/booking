@@ -1,0 +1,59 @@
+spring:
+  application:
+    name: server
+
+  datasource:
+    driver-class-name: org.postgresql.Driver
+    url: jdbc:postgresql://dpg-d4nvrimr433s73eg93gg-a.oregon-postgres.render.com:5432/booking_z9g4
+    username: booking_z9g4_user
+    password: 21FzZwQBd6CBbGMYjoLWDUu3LF8rSZ4O
+    hikari:
+      maximum-pool-size: 5
+
+    jpa:
+      hibernate:
+        ddl-auto: update
+      properties:
+        hibernate:
+          dialect: org.hibernate.dialect.PostgreSQLDialect
+
+  mvc:
+    view:
+      prefix: classpath:/templates/
+      suffix: .html
+
+  mail:
+    host: smtp.gmail.com
+    port: 587
+    username: phamlong22222004@gmail.com
+    password: rvlbpybpybtheoeempy
+    protocol: smtp
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+    default-encoding: UTF-8
+
+  vnpay:
+    pay-url: https://sandbox.vnpayment.vn/merchant_webapi/api/transaction
+    return-url: https://snacklybe.onrender.com/payments/vnpay-return?redirect=snackly://payment-result
+    tmn-code: OE7APJBX
+    secret-key: 1GV9P3PDGUD0OHZ4JFYJ5NSYJ31SPQNA
+    api-url: https://sandbox.vnpayment.vn/paymentv2/vpcpay.html
+
+jwt:
+  secret: snackly-super-secret-key-12345678
+  expiration-in-ms: 86400000
+  app:
+    otp:
+      ttl-seconds: 300
+  header: Authorization
+  prefix: Bearer
+
+cors:
+  allowed-origins: "*"
+  allowed-methods: GET,POST,PUT,DELETE,OPTIONS
+  allowed-headers: "*"
+  max-age: 3600
