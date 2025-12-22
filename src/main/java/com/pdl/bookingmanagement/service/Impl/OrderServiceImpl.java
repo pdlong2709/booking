@@ -25,7 +25,7 @@ public class OrderServiceImpl implements OrderService {
 
     @Override
     public List<OrderDTO> getOrdersBySellerId(int sellerId) {
-        List<Order> orders = orderRepository.findBySeller_Id(sellerId);
+        List<Order> orders = orderRepository.findBySeller_IdOrderByOrderDateDesc(sellerId);
         return orders.stream()
                 .map(this::convertToDTO)
                 .collect(Collectors.toList());
@@ -51,6 +51,7 @@ public class OrderServiceImpl implements OrderService {
         if (order.getCustomer() != null) {
             dto.setCustomerId(order.getCustomer().getId());
             dto.setCustomerName(order.getCustomer().getFullName());
+            dto.setPhone(order.getCustomer().getPhone());
         }
         if(order.getSeller() != null) {
             dto.setSellerId(order.getSeller().getId());
@@ -74,32 +75,47 @@ public class OrderServiceImpl implements OrderService {
     private Order convertToEntity(OrderDTO dto) {
         Order order = new Order();
         order.setId(dto.getId());
-        order.setCustomerName(dto.getCustomerName());
-        User customer = userRepository.findById(dto.getCustomerId())
-                .orElseThrow(() -> new RuntimeException("Customer not found"));
+        User customer;
+        if (dto.getCustomerId() != null && dto.getCustomerId() > 0) {
+            customer = userRepository.findUserById(dto.getCustomerId());
+            if (customer == null) {
+                throw new RuntimeException("Customer not found");
+            }
+        } else {
+            customer = new User();
+            customer.setFullName(dto.getCustomerName());
+            customer.setPhone(dto.getPhone());
+            customer.setEmail(null);
+            customer.setAddress(null);
+            customer.setPassword("123456");
+            customer.setRole("Customer");
+            customer.setStatus(true);
+            customer = userRepository.save(customer);
+        }
         order.setCustomer(customer);
-        User seller = userRepository.findById(dto.getSellerId())
-                .orElseThrow(() -> new RuntimeException("Seller not found"));
+        order.setCustomerName(customer.getFullName());
+        // ===== SELLER =====
+        User seller = userRepository.findUserById(dto.getSellerId());
         order.setSeller(seller);
         order.setPhone(dto.getPhone());
         order.setOrderDate(dto.getOrderDate());
         order.setStatus(dto.getStatus());
         order.setTotalAmount(dto.getTotalAmount());
         order.setNote(dto.getNote());
+        // ===== ORDER ITEMS =====
         List<OrderItem> items = null;
-        if (dto.getOrderItems() != null && dto.getOrderItems().size() > 0) {
-            items = dto.getOrderItems().stream()
-                    .map(itemDTO -> {
-                        OrderItem item = new OrderItem();
-                        item.setId(itemDTO.getId());
-                        Product product = productRepository.findById(itemDTO.getProductId()).orElseThrow(() -> new RuntimeException("Product not found"));
-                        item.setProduct(product);
-                        item.setQuantity(itemDTO.getQuantity());
-                        item.setUnitWeight(itemDTO.getUnitWeight());
-                        item.setSubTotal(item.getSubTotal());
-                        item.setOrder(order);
-                        return item;
-                    }).collect(Collectors.toList());
+        if (dto.getOrderItems() != null && !dto.getOrderItems().isEmpty()) {
+            items = dto.getOrderItems().stream().map(itemDTO -> {
+                OrderItem item = new OrderItem();
+                Product product = productRepository.findById(itemDTO.getProductId())
+                        .orElseThrow(() -> new RuntimeException("Product not found"));
+                item.setProduct(product);
+                item.setQuantity(itemDTO.getQuantity());
+                item.setUnitWeight(itemDTO.getUnitWeight());
+                item.setSubTotal(itemDTO.getQuantity() * itemDTO.getUnitWeight());
+                item.setOrder(order);
+                return item;
+            }).collect(Collectors.toList());
         }
         order.setOrderItems(items);
         return order;

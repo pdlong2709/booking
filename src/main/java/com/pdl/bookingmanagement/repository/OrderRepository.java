@@ -10,7 +10,7 @@ import java.util.List;
 
 @Repository
 public interface OrderRepository extends JpaRepository<Order, Integer> {
-    List<Order> findBySeller_Id(int sellerId);
+    List<Order> findBySeller_IdOrderByOrderDateDesc(int sellerId);
 
     @Query("SELECT o FROM Order o " +
             "WHERE LOWER(o.customer.fullName) LIKE LOWER(CONCAT('%', :name, '%')) " +
