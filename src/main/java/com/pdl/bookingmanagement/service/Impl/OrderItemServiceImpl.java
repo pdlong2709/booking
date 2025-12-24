@@ -31,7 +31,7 @@ public class OrderItemServiceImpl implements OrderItemService {
         dto.setProductId(orderItem.getProduct().getId());
         dto.setQuantity(orderItem.getQuantity());
         dto.setUnitWeight(orderItem.getUnitWeight());
-        dto.setSubTotal(orderItem.getQuantity() * orderItem.getUnitWeight());
+        dto.setSubTotal(orderItem.getSubTotal());
         return dto;
     }
 }

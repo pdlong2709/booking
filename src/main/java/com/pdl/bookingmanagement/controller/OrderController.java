@@ -34,4 +34,10 @@ public class OrderController {
         OrderDTO newOrder = orderService.createOrder(orderDTO);
         return ResponseEntity.ok(newOrder);
     }
+
+    @PutMapping("/updateOrder")
+    public ResponseEntity<OrderDTO> updateOrder(@RequestBody OrderDTO orderDTO) {
+        OrderDTO updateOrder = orderService.updateOrder(orderDTO);
+        return ResponseEntity.ok(updateOrder);
+    }
 }

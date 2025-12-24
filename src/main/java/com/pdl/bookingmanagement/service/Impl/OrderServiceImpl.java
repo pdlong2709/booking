@@ -14,6 +14,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @Service
@@ -43,6 +44,67 @@ public class OrderServiceImpl implements OrderService {
     public OrderDTO createOrder(OrderDTO orderDTO) {
         Order order = orderRepository.save(convertToEntity(orderDTO));
         return convertToDTO(order);
+    }
+
+    @Override
+    public OrderDTO updateOrder(OrderDTO orderDTO) {
+        Order order = orderRepository.findById(orderDTO.getId())
+                .orElseThrow(() -> new RuntimeException("Order not found!"));
+        if(order.getCustomer() != null){
+            User customer = userRepository.findUserById(orderDTO.getCustomerId());
+            order.setCustomer(customer);
+            order.setCustomerName(orderDTO.getCustomerName());
+            order.setPhone(orderDTO.getPhone());
+        }
+        User seller =  userRepository.findUserById(orderDTO.getSellerId());
+        order.setSeller(seller);
+        order.setStatus(orderDTO.getStatus());
+        order.setNote(orderDTO.getNote());
+        if(orderDTO.getOrderItems() != null){
+            Map<Integer, OrderItem> existingItems = order.getOrderItems()
+                    .stream()
+                    .collect(Collectors.toMap(OrderItem::getId, i -> i));
+
+            List<OrderItem> updatedItems = orderDTO.getOrderItems().stream()
+                    .map(itemDTO -> {
+                        OrderItem item;
+
+                        // Nếu có ID → UPDATE
+                        if (itemDTO.getId() != null && existingItems.containsKey(itemDTO.getId())) {
+                            item = existingItems.get(itemDTO.getId());
+                        }
+                        // Nếu không có ID → CREATE
+                        else {
+                            item = new OrderItem();
+                            item.setOrder(order);
+                        }
+
+                        Product product = productRepository.findById(itemDTO.getProductId())
+                                .orElseThrow(() -> new RuntimeException("Product not found"));
+
+                        item.setProduct(product);
+                        item.setQuantity(itemDTO.getQuantity());
+                        item.setUnitWeight(itemDTO.getUnitWeight());
+                        item.setSubTotal(itemDTO.getSubTotal());
+                        return item;
+                    }).collect(Collectors.toList());
+
+            // Gán lại list → orphanRemoval sẽ xóa item bị remove
+            order.getOrderItems().clear();
+            order.getOrderItems().addAll(updatedItems);
+        }
+        double totalAmount = order.getOrderItems()
+                .stream()
+                .mapToDouble(item ->
+                        item.getQuantity()
+                                * item.getUnitWeight()
+                                * item.getSubTotal()
+                )
+                .sum();
+        order.setTotalAmount(totalAmount);
+        order.setTotalAmount(totalAmount);
+        Order updatedOrder = orderRepository.save(order);
+        return convertToDTO(updatedOrder);
     }
 
     private OrderDTO convertToDTO(Order order) {
@@ -100,7 +162,6 @@ public class OrderServiceImpl implements OrderService {
         order.setPhone(dto.getPhone());
         order.setOrderDate(dto.getOrderDate());
         order.setStatus(dto.getStatus());
-        order.setTotalAmount(dto.getTotalAmount());
         order.setNote(dto.getNote());
         // ===== ORDER ITEMS =====
         List<OrderItem> items = null;
@@ -112,11 +173,21 @@ public class OrderServiceImpl implements OrderService {
                 item.setProduct(product);
                 item.setQuantity(itemDTO.getQuantity());
                 item.setUnitWeight(itemDTO.getUnitWeight());
-                item.setSubTotal(itemDTO.getQuantity() * itemDTO.getUnitWeight());
+                item.setSubTotal(itemDTO.getSubTotal());
                 item.setOrder(order);
                 return item;
             }).collect(Collectors.toList());
         }
+        double totalAmount = order.getOrderItems()
+                .stream()
+                .mapToDouble(item ->
+                        item.getQuantity()
+                                * item.getUnitWeight()
+                                * item.getSubTotal()
+                )
+                .sum();
+
+        order.setTotalAmount(totalAmount);
         order.setOrderItems(items);
         return order;
     }
@@ -133,7 +204,7 @@ public class OrderServiceImpl implements OrderService {
 
         dto.setQuantity(orderDetail.getQuantity());
         dto.setUnitWeight(orderDetail.getUnitWeight());
-        dto.setSubTotal(orderDetail.getQuantity() * orderDetail.getUnitWeight());
+        dto.setSubTotal(orderDetail.getSubTotal());
         return dto;
     }
 }
