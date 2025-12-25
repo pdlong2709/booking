@@ -45,6 +45,15 @@ public class Order {
     @Column(name = "note")
     private String note;
 
+    @Column(name = "payment_status")
+    private String paymentStatus;
+
+    @Column(name = "receivedAt")
+    private LocalDateTime receivedAt;
+
+    @Column(name = "paidAt")
+    private LocalDateTime paidAt;
+
     @OneToMany(
             mappedBy = "order",
             cascade = CascadeType.ALL,

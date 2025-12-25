@@ -18,7 +18,10 @@ public class OrderDTO {
     private Integer sellerId;
     private String sellerName;
     private LocalDateTime orderDate;
+    private LocalDateTime receivedAt;
+    private LocalDateTime paidAt;
     private String status;
+    private String paymentStatus;
     private double totalAmount;
     private String note;
     private List<OrderItemDTO> orderItems;

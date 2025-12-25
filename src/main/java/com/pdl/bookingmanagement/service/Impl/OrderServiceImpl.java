@@ -13,6 +13,7 @@ import com.pdl.bookingmanagement.service.OrderService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -60,6 +61,7 @@ public class OrderServiceImpl implements OrderService {
         order.setSeller(seller);
         order.setStatus(orderDTO.getStatus());
         order.setNote(orderDTO.getNote());
+        order.setOrderDate(orderDTO.getOrderDate());
         if(orderDTO.getOrderItems() != null){
             Map<Integer, OrderItem> existingItems = order.getOrderItems()
                     .stream()
@@ -107,6 +109,22 @@ public class OrderServiceImpl implements OrderService {
         return convertToDTO(updatedOrder);
     }
 
+    @Override
+    public OrderDTO updateStatus(int orderId) {
+        Order order = orderRepository.findById(orderId).orElseThrow(() -> new RuntimeException("Order not found!"));
+        order.setStatus("Đã nhận");
+        order.setReceivedAt(LocalDateTime.now());
+        return convertToDTO(orderRepository.save(order));
+    }
+
+    @Override
+    public OrderDTO updatePaymentStatus(int orderId) {
+        Order order = orderRepository.findById(orderId).orElseThrow(() -> new RuntimeException("Order not found!"));
+        order.setPaymentStatus("Đã thanh toán");
+        order.setPaidAt(LocalDateTime.now());
+        return convertToDTO(orderRepository.save(order));
+    }
+
     private OrderDTO convertToDTO(Order order) {
         OrderDTO dto = new OrderDTO();
         dto.setId(order.getId());
@@ -121,7 +139,10 @@ public class OrderServiceImpl implements OrderService {
         }
         dto.setTotalAmount(order.getTotalAmount());
         dto.setStatus(order.getStatus());
+        dto.setPaymentStatus(order.getPaymentStatus());
         dto.setOrderDate(order.getOrderDate());
+        dto.setReceivedAt(order.getReceivedAt());
+        dto.setPaidAt(order.getPaidAt());
         dto.setNote(order.getNote());
 
         if (order.getOrderItems() != null) {

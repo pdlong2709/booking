@@ -3,12 +3,10 @@ package com.pdl.bookingmanagement.controller;
 import com.pdl.bookingmanagement.dto.OrderDTO;
 import com.pdl.bookingmanagement.service.OrderService;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-import java.util.Map;
 
 @RestController
 @RequestMapping("/orders")
@@ -39,5 +37,17 @@ public class OrderController {
     public ResponseEntity<OrderDTO> updateOrder(@RequestBody OrderDTO orderDTO) {
         OrderDTO updateOrder = orderService.updateOrder(orderDTO);
         return ResponseEntity.ok(updateOrder);
+    }
+
+    @PutMapping("/updateStatus")
+    public ResponseEntity<OrderDTO> updateStatus(@RequestParam("id") int orderId) {
+        OrderDTO updateStatus = orderService.updateStatus(orderId);
+        return ResponseEntity.ok(updateStatus);
+    }
+
+    @PutMapping("/updatePaymentStatus")
+    public ResponseEntity<OrderDTO> updatePaymentStatus(@RequestParam("id") int orderId) {
+        OrderDTO updateStatus = orderService.updatePaymentStatus(orderId);
+        return ResponseEntity.ok(updateStatus);
     }
 }
