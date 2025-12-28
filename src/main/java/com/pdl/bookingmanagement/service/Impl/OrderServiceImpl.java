@@ -131,12 +131,12 @@ public class OrderServiceImpl implements OrderService {
         if (order.getCustomer() != null) {
             dto.setCustomerId(order.getCustomer().getId());
             dto.setCustomerName(order.getCustomer().getFullName());
-            dto.setPhone(order.getCustomer().getPhone());
         }
         if(order.getSeller() != null) {
             dto.setSellerId(order.getSeller().getId());
             dto.setSellerName(order.getSeller().getFullName());
         }
+        dto.setPhone(order.getPhone());
         dto.setTotalAmount(order.getTotalAmount());
         dto.setStatus(order.getStatus());
         dto.setPaymentStatus(order.getPaymentStatus());
@@ -158,6 +158,8 @@ public class OrderServiceImpl implements OrderService {
     private Order convertToEntity(OrderDTO dto) {
         Order order = new Order();
         order.setId(dto.getId());
+
+        // ===== CUSTOMER =====
         User customer;
         if (dto.getCustomerId() != null && dto.getCustomerId() > 0) {
             customer = userRepository.findUserById(dto.getCustomerId());
@@ -168,8 +170,6 @@ public class OrderServiceImpl implements OrderService {
             customer = new User();
             customer.setFullName(dto.getCustomerName());
             customer.setPhone(dto.getPhone());
-            customer.setEmail(null);
-            customer.setAddress(null);
             customer.setPassword("123456");
             customer.setRole("Customer");
             customer.setStatus(true);
@@ -177,30 +177,40 @@ public class OrderServiceImpl implements OrderService {
         }
         order.setCustomer(customer);
         order.setCustomerName(customer.getFullName());
+
         // ===== SELLER =====
         User seller = userRepository.findUserById(dto.getSellerId());
         order.setSeller(seller);
+
         order.setPhone(dto.getPhone());
         order.setOrderDate(dto.getOrderDate());
         order.setStatus(dto.getStatus());
+        order.setPaymentStatus(dto.getPaymentStatus());
+        order.setReceivedAt(dto.getReceivedAt());
+        order.setPaidAt(dto.getPaidAt());
         order.setNote(dto.getNote());
+
         // ===== ORDER ITEMS =====
-        List<OrderItem> items = null;
-        if (dto.getOrderItems() != null && !dto.getOrderItems().isEmpty()) {
-            items = dto.getOrderItems().stream().map(itemDTO -> {
-                OrderItem item = new OrderItem();
-                Product product = productRepository.findById(itemDTO.getProductId())
-                        .orElseThrow(() -> new RuntimeException("Product not found"));
-                item.setProduct(product);
-                item.setQuantity(itemDTO.getQuantity());
-                item.setUnitWeight(itemDTO.getUnitWeight());
-                item.setSubTotal(itemDTO.getSubTotal());
-                item.setOrder(order);
-                return item;
-            }).collect(Collectors.toList());
-        }
-        double totalAmount = order.getOrderItems()
-                .stream()
+        List<OrderItem> items = dto.getOrderItems() == null
+                ? List.of()
+                : dto.getOrderItems().stream()
+                .map(itemDTO -> {
+                    OrderItem item = new OrderItem();
+                    Product product = productRepository.findById(itemDTO.getProductId())
+                            .orElseThrow(() -> new RuntimeException("Product not found"));
+
+                    item.setProduct(product);
+                    item.setQuantity(itemDTO.getQuantity());
+                    item.setUnitWeight(itemDTO.getUnitWeight());
+                    item.setSubTotal(itemDTO.getSubTotal());
+                    item.setOrder(order);
+                    return item;
+                }).toList();
+
+        order.setOrderItems(items);
+
+        // ===== TOTAL =====
+        double totalAmount = items.stream()
                 .mapToDouble(item ->
                         item.getQuantity()
                                 * item.getUnitWeight()
@@ -209,9 +219,10 @@ public class OrderServiceImpl implements OrderService {
                 .sum();
 
         order.setTotalAmount(totalAmount);
-        order.setOrderItems(items);
+
         return order;
     }
+
 
     private OrderItemDTO convertOrderItemToDTO(OrderItem orderDetail) {
         OrderItemDTO dto = new OrderItemDTO();
