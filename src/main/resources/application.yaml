@@ -4,18 +4,20 @@ spring:
 
   datasource:
     driver-class-name: org.postgresql.Driver
-    url: jdbc:postgresql://dpg-d4nvrimr433s73eg93gg-a.oregon-postgres.render.com:5432/booking_z9g4
-    username: booking_z9g4_user
-    password: 21FzZwQBd6CBbGMYjoLWDUu3LF8rSZ4O
+    url: jdbc:postgresql://dpg-d5d7vh4hg0os73f3g67g-a.oregon-postgres.render.com:5432/booking_n9b5
+    username: booking_n9b5_user
+    password: qPDOTqSJgJ1KTuTBDCjup6Hzk0Jnbqfv
     hikari:
       maximum-pool-size: 5
 
-    jpa:
+  jpa:
+    hibernate:
+      ddl-auto: update
+    properties:
       hibernate:
-        ddl-auto: update
-      properties:
-        hibernate:
-          dialect: org.hibernate.dialect.PostgreSQLDialect
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        default_schema: public
+    show-sql: true
 
   mvc:
     view:
