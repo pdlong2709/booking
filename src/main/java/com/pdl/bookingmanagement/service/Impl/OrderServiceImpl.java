@@ -170,6 +170,7 @@ public class OrderServiceImpl implements OrderService {
             customer = new User();
             customer.setFullName(dto.getCustomerName());
             customer.setPhone(dto.getPhone());
+            customer.setEmail(null);
             customer.setPassword("123456");
             customer.setRole("Customer");
             customer.setStatus(true);
